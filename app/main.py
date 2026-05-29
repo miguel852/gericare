@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, Response
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -111,3 +111,10 @@ async def api_export_residents():
     csv_content = database.export_residents_csv(settings.database_path)
     headers = {"Content-Disposition": 'attachment; filename="gericare-residents.csv"'}
     return Response(content=csv_content, media_type="text/csv; charset=utf-8", headers=headers)
+
+
+@app.get("/{path:path}", include_in_schema=False)
+async def fallback_to_dashboard(path: str):
+    if path.startswith("api/") or path.startswith("static/"):
+        raise HTTPException(status_code=404, detail="Not found")
+    return RedirectResponse(url="/")
