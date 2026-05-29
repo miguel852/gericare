@@ -1,0 +1,16 @@
+services:
+  gericare:
+    build: .
+    container_name: gericare
+    ports:
+      - "8000:8000"
+    environment:
+      GERICARE_FACILITY_NAME: "Residencial Aurora"
+      GERICARE_DB: "/app/data/gericare.sqlite3"
+      GERICARE_AUTO_SEED: "1"
+    volumes:
+      - gericare_data:/app/data
+    restart: unless-stopped
+
+volumes:
+  gericare_data:

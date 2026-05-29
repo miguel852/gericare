@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#14213d" />
+    <title>GeriCare</title>
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="icon" href="/static/logo.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegacao principal">
+        <a class="brand" href="/" aria-label="GeriCare inicio">
+          <img src="/static/logo.svg" alt="" />
+          <span>
+            <strong>GeriCare</strong>
+            <small>{{ facility_name }}</small>
+          </span>
+        </a>
+
+        <nav class="nav-list">
+          <button class="nav-item active" type="button" data-jump="#overview">Painel</button>
+          <button class="nav-item" type="button" data-jump="#residents">Residentes</button>
+          <button class="nav-item" type="button" data-jump="#family">Familiares</button>
+          <button class="nav-item" type="button" data-jump="#tasks">Plantao</button>
+          <button class="nav-item" type="button" data-jump="#meds">Medicacoes</button>
+          <button class="nav-item" type="button" data-jump="#care">Cuidados</button>
+        </nav>
+
+        <div class="sidebar-actions">
+          <a class="ghost-button" href="/api/export/residents.csv">Exportar CSV</a>
+          <button class="ghost-button" id="focusMode" type="button">Modo foco</button>
+        </div>
+
+        <div class="facility-card">
+          <span class="pulse"></span>
+          <div>
+            <strong>Operacao ativa</strong>
+            <small>{{ metrics.residents }} residentes monitorados</small>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="hero" id="overview">
+          <div>
+            <p class="eyebrow">Central Python de cuidado geriatrico</p>
+            <h1>Plantao, familia e cuidado no mesmo lugar.</h1>
+          </div>
+          <div class="hero-actions">
+            <label class="search">
+              <span class="search-icon"></span>
+              <input id="residentSearch" type="search" placeholder="Buscar nome, quarto ou condicao" />
+            </label>
+            <button class="primary-button" type="button" id="openQuickEvent">Registrar evento</button>
+          </div>
+        </header>
+
+        <section class="metrics-grid" aria-label="Resumo do plantao">
+          <article class="metric">
+            <span class="metric-icon teal"></span>
+            <small>Residentes</small>
+            <strong>{{ metrics.residents }}</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-icon coral"></span>
+            <small>Criticos</small>
+            <strong>{{ metrics.critical }}</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-icon violet"></span>
+            <small>Em observacao</small>
+            <strong>{{ metrics.watch }}</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-icon gold"></span>
+            <small>Pendencias</small>
+            <strong>{{ metrics.pending_tasks }}</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-icon green"></span>
+            <small>Doses proximas</small>
+            <strong>{{ metrics.due_meds }}</strong>
+          </article>
+          <article class="metric">
+            <span class="metric-icon blue"></span>
+            <small>Familiares</small>
+            <strong>{{ metrics.family_contacts }}</strong>
+          </article>
+        </section>
+
+        <div class="content-grid">
+          <section class="panel residents-panel" id="residents">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Risco inteligente</p>
+                <h2>Residentes prioritarios</h2>
+              </div>
+              <div class="chips" role="group" aria-label="Filtro de risco">
+                <button class="chip active" type="button" data-risk="all">Todos</button>
+                <button class="chip" type="button" data-risk="critico">Criticos</button>
+                <button class="chip" type="button" data-risk="observacao">Observacao</button>
+                <button class="chip" type="button" data-risk="estavel">Estaveis</button>
+              </div>
+            </div>
+
+            <div class="resident-list" id="residentList">
+              {% for resident in residents %}
+              <article
+                class="resident-card"
+                data-risk="{{ resident.risk.level }}"
+                data-search="{{ resident.name|lower }} {{ resident.room|lower }} {{ resident.condition|lower }} {{ resident.primary_contact|lower }}"
+              >
+                <div class="resident-score" style="--score: {{ resident.risk.score }}">
+                  <span>{{ resident.risk.score }}</span>
+                </div>
+                <div class="resident-main">
+                  <div class="resident-title">
+                    <strong>{{ resident.name }}</strong>
+                    <span class="risk-tag {{ resident.risk.level }}">{{ resident.risk.level }}</span>
+                  </div>
+                  <small>{{ resident.age }} anos - quarto {{ resident.room }} - {{ resident.condition }}</small>
+                  <div class="resident-vitals">
+                    <span>PA {{ resident.systolic }}/{{ resident.diastolic }}</span>
+                    <span>Dor {{ resident.pain_score }}/10</span>
+                    <span>Glic. {{ resident.glucose }}</span>
+                    <span>Hid. {{ resident.hydration_ml }}ml</span>
+                  </div>
+                </div>
+                <button class="outline-button digest-button" type="button" data-resident-id="{{ resident.id }}">
+                  Resumo
+                </button>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel family-panel" id="family">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Rede de apoio</p>
+                <h2>Familiares e contatos rapidos</h2>
+              </div>
+              <strong class="quiet-counter">{{ metrics.emergency_contacts }} emergenciais</strong>
+            </div>
+            <div class="family-grid">
+              {% for contact in family_contacts %}
+              <article
+                class="family-card"
+                data-search="{{ contact.name|lower }} {{ contact.resident_name|lower }} {{ contact.room|lower }} {{ contact.relationship|lower }}"
+              >
+                <div>
+                  <div class="family-title">
+                    <strong>{{ contact.name }}</strong>
+                    {% if contact.emergency %}
+                    <span>Emergencia</span>
+                    {% endif %}
+                  </div>
+                  <small>{{ contact.relationship }} de {{ contact.resident_name }} - quarto {{ contact.room }}</small>
+                  <p>{{ contact.preference }}. {{ contact.notes }}</p>
+                </div>
+                <div class="contact-actions">
+                  <a class="icon-button" href="tel:{{ contact.phone }}" aria-label="Ligar para {{ contact.name }}">TEL</a>
+                  <a
+                    class="icon-button whatsapp"
+                    href="https://wa.me/{{ contact.whatsapp }}"
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Abrir WhatsApp de {{ contact.name }}"
+                  >WA</a>
+                  <button class="outline-button copy-phone" type="button" data-phone="{{ contact.phone }}">Copiar</button>
+                </div>
+                <strong class="phone-number">{{ contact.phone }}</strong>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel" id="tasks">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Hoje</p>
+                <h2>Roteiro do plantao</h2>
+              </div>
+            </div>
+            <div class="task-list" id="taskList">
+              {% for task in tasks %}
+              <article class="task-row {{ task.status }}" data-priority="{{ task.priority }}">
+                <button
+                  class="task-toggle"
+                  type="button"
+                  data-task-id="{{ task.id }}"
+                  aria-label="Alternar tarefa"
+                ></button>
+                <div>
+                  <time>{{ task.scheduled_at }}</time>
+                  <strong>{{ task.title }}</strong>
+                  <small>{{ task.resident_name }} - quarto {{ task.room }} - {{ task.category }}</small>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel" id="meds">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Farmacia</p>
+                <h2>Proximas medicacoes</h2>
+              </div>
+            </div>
+            <div class="med-list">
+              {% for medication in medications %}
+              <article class="med-row">
+                <span>{{ medication.next_at }}</span>
+                <div>
+                  <strong>{{ medication.name }} {{ medication.dose }}</strong>
+                  <small>{{ medication.resident_name }} - {{ medication.instructions }}</small>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel quick-event" id="quickEvent">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Registro rapido</p>
+                <h2>Evento clinico</h2>
+              </div>
+            </div>
+            <form id="eventForm">
+              <label>
+                Residente
+                <select name="resident_id">
+                  <option value="">Geral do plantao</option>
+                  {% for resident in residents %}
+                  <option value="{{ resident.id }}">{{ resident.name }} - {{ resident.room }}</option>
+                  {% endfor %}
+                </select>
+              </label>
+              <label>
+                Severidade
+                <select name="severity">
+                  <option value="normal">Normal</option>
+                  <option value="warning">Alerta</option>
+                  <option value="high">Alta</option>
+                </select>
+              </label>
+              <label>
+                Nota
+                <textarea name="note" rows="4" placeholder="Ex.: aceitou 300ml de agua e caminhou 8 minutos" required></textarea>
+              </label>
+              <button class="primary-button" type="submit">Salvar evento</button>
+            </form>
+          </section>
+
+          <section class="panel events-panel">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Timeline</p>
+                <h2>Eventos recentes</h2>
+              </div>
+            </div>
+            <div class="event-list" id="eventList">
+              {% for event in events %}
+              <article class="event-row {{ event.severity }}">
+                <span></span>
+                <div>
+                  <strong>{{ event.resident_name or "Plantao" }}</strong>
+                  <small>{{ event.note }}</small>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel visits-panel" id="visits">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Portaria e familia</p>
+                <h2>Visitas combinadas</h2>
+              </div>
+            </div>
+            <div class="visit-list">
+              {% for visit in visits %}
+              <article class="visit-row">
+                <span>{{ visit.visit_at }}</span>
+                <div>
+                  <strong>{{ visit.visitor_name }}</strong>
+                  <small>{{ visit.resident_name }} - quarto {{ visit.room }} - {{ visit.status }}</small>
+                  <p>{{ visit.notes }}</p>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+
+          <section class="panel care-panel" id="care">
+            <div class="panel-heading compact">
+              <div>
+                <p class="eyebrow">Plano vivo</p>
+                <h2>Cuidados personalizados</h2>
+              </div>
+            </div>
+            <div class="care-list">
+              {% for plan in care_plans %}
+              <article class="care-row">
+                <span>{{ plan.owner }}</span>
+                <div>
+                  <strong>{{ plan.focus }}</strong>
+                  <small>{{ plan.resident_name }} - quarto {{ plan.room }}</small>
+                  <p>{{ plan.goal }}. {{ plan.routine }}.</p>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <aside class="digest-panel" id="digestPanel" aria-live="polite" aria-label="Resumo do residente">
+      <button class="close-button" type="button" id="closeDigest" aria-label="Fechar">x</button>
+      <p class="eyebrow">Resumo automatico</p>
+      <h2 id="digestHeadline">Selecione um residente</h2>
+      <p id="digestSummary">O resumo do plantao aparece aqui.</p>
+      <ul id="digestActions"></ul>
+      <button class="outline-button" type="button" id="copyDigest">Copiar resumo</button>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

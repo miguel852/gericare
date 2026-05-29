@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: gericare
+    runtime: docker
+    plan: starter
+    envVars:
+      - key: GERICARE_FACILITY_NAME
+        value: Residencial Aurora
+      - key: GERICARE_DB
+        value: /app/data/gericare.sqlite3
+      - key: GERICARE_AUTO_SEED
+        value: "1"
+    disk:
+      name: gericare-data
+      mountPath: /app/data
+      sizeGB: 1
