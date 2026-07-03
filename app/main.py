@@ -32,16 +32,18 @@ app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), na
 def render_page(request: Request, page: str, title: str):
     settings = get_settings()
     data = database.dashboard(settings.database_path)
-    return templates.TemplateResponse(
-        "dashboard.html",
-        {
-            "request": request,
-            "facility_name": settings.facility_name,
-            "page": page,
-            "page_title": title,
-            **data,
-        },
-    )
+    context = {
+        "request": request,
+        "facility_name": settings.facility_name,
+        "page": page,
+        "page_title": title,
+        **data,
+    }
+    try:
+        return templates.TemplateResponse(request=request, name="dashboard.html", context=context)
+    except TypeError:
+        # Compatibilidade com Starlette anterior a 0.29.
+        return templates.TemplateResponse("dashboard.html", context)
 
 
 @app.get("/", response_class=HTMLResponse)
