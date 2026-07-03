@@ -1,0 +1,6 @@
+.venv/
+.hadoop/
+__pycache__/
+*.pyc
+output/
+*.log

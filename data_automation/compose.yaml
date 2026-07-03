@@ -1,0 +1,10 @@
+services:
+  gericare-data-automation:
+    build: .
+    container_name: gericare-data-automation
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+    environment:
+      - PYSPARK_PYTHON=python
+

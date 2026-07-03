@@ -74,6 +74,25 @@ python -m unittest discover -s tests
 - Exportacao CSV dos residentes.
 - Dockerfile, Docker Compose, healthcheck e `.env.example`.
 - PWA basico com cache de assets estaticos.
+- Projeto separado de automacao de dados em `data_automation/` com PySpark, Docker,
+  notebook Databricks, camadas bronze/silver/gold e exemplos de planilhas.
+
+## Automacao de dados
+
+O diretorio `data_automation/` contem um pipeline separado para tratar planilhas do
+GeriCare sem acoplar ao app FastAPI.
+
+```powershell
+cd data_automation
+.\run.ps1
+```
+
+Ou com Docker:
+
+```bash
+cd data_automation
+docker compose up --build
+```
 
 ## Endpoints uteis
 

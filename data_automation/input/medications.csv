@@ -1,0 +1,5 @@
+resident_id,medication,dose,scheduled_at,status
+1,Losartana,50mg,2026-06-01 10:30:00,scheduled
+2,Metformina,850mg,2026-06-01 11:00:00,given
+3,Dipirona,500mg,2026-06-01 12:00:00,scheduled
+4,Enoxaparina,40mg,2026-06-01 18:00:00,scheduled

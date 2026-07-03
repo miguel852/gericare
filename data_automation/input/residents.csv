@@ -1,0 +1,5 @@
+resident_id,name,age,room,condition,primary_contact,contact_phone,mobility,fall_risk,updated_at
+1,Helena Matos,84,B-12,hipertensao e risco de queda,Mariana Matos,5511984221408,anda com apoio,8,2026-06-01 08:00:00
+2,Joao Ferreira,79,A-04,diabetes tipo 2,Rafael Ferreira,5521988407742,caminhada assistida,4,2026-06-01 08:00:00
+3,Lourdes Almeida,91,C-08,dor lombar cronica,Beatriz Almeida,5531991256300,cadeira de rodas,6,2026-06-01 08:00:00
+4,Sergio Paiva,87,A-11,pos-operatorio de quadril,Patricia Paiva,5541997085126,restricao parcial,7,2026-06-01 08:00:00

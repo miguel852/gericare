@@ -17,6 +17,26 @@
       "cwd": "${workspaceFolder}",
       "jinja": true,
       "console": "integratedTerminal"
+    },
+    {
+      "name": "GeriCare - Data Pipeline",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/data_automation/src/pipeline.py",
+      "args": [
+        "--input",
+        "${workspaceFolder}/data_automation/input",
+        "--output",
+        "${workspaceFolder}/data_automation/output"
+      ],
+      "cwd": "${workspaceFolder}/data_automation",
+      "env": {
+        "HADOOP_HOME": "${workspaceFolder}/data_automation/.hadoop",
+        "hadoop_home_dir": "${workspaceFolder}/data_automation/.hadoop",
+        "PYSPARK_PYTHON": "${workspaceFolder}/data_automation/.venv/Scripts/python.exe",
+        "PATH": "${workspaceFolder}/data_automation/.hadoop/bin;${env:PATH}"
+      },
+      "console": "integratedTerminal"
     }
   ]
 }

@@ -1,0 +1,6 @@
+resident_id,task,category,scheduled_at,priority,status
+1,Reavaliar pressao apos repouso,sinais vitais,2026-06-01 08:30:00,high,pending
+1,Checar campainha e caminho livre,seguranca,2026-06-01 09:00:00,high,pending
+2,Glicemia capilar antes do almoco,sinais vitais,2026-06-01 11:20:00,normal,pending
+3,Escala de dor e conforto postural,dor,2026-06-01 10:00:00,high,pending
+4,Treino de transferencia com fisio,reabilitacao,2026-06-01 13:30:00,normal,done
