@@ -4,7 +4,6 @@ const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)
 let lastDigest = "";
 
 window.addEventListener("DOMContentLoaded", () => {
-  bindNavigation();
   bindFilters();
   bindTaskToggles();
   bindDigest();
@@ -13,16 +12,6 @@ window.addEventListener("DOMContentLoaded", () => {
   bindFocusMode();
   registerServiceWorker();
 });
-
-function bindNavigation() {
-  qsa(".nav-item").forEach((button) => {
-    button.addEventListener("click", () => {
-      qsa(".nav-item").forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-      qs(button.dataset.jump)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
-}
 
 function bindFilters() {
   const search = qs("#residentSearch");
@@ -46,9 +35,6 @@ function filterResidents() {
     card.hidden = !(matchesRisk && matchesTerm);
   });
 
-  qsa(".family-card").forEach((card) => {
-    card.hidden = Boolean(term) && !card.dataset.search.includes(term);
-  });
 }
 
 function bindTaskToggles() {

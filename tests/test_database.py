@@ -51,6 +51,17 @@ class DatabaseTest(unittest.TestCase):
             self.assertIsNotNone(digest)
             self.assertTrue(any("familiar de referencia" in action for action in digest["actions"]))
 
+    def test_dashboard_exposes_active_nurses_and_doctors_on_duty(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            db_path = str(Path(temp_dir) / "gericare.sqlite3")
+            database.init_database(db_path, auto_seed=True)
+
+            data = database.dashboard(db_path)
+
+            self.assertGreaterEqual(data["metrics"]["active_nurses"], 1)
+            self.assertGreaterEqual(data["metrics"]["doctors_on_duty"], 1)
+            self.assertTrue(all(member["status"] == "active" for member in data["active_staff"]))
+
 
 if __name__ == "__main__":
     unittest.main()

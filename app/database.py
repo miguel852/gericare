@@ -88,6 +88,17 @@ CREATE TABLE IF NOT EXISTS care_plans (
     routine TEXT NOT NULL,
     owner TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS staff (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    specialty TEXT NOT NULL DEFAULT '',
+    shift_start TEXT NOT NULL,
+    shift_end TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'active',
+    phone_extension TEXT NOT NULL DEFAULT ''
+);
 """
 
 
@@ -292,6 +303,24 @@ def seed_support_tables_if_empty(connection: sqlite3.Connection) -> None:
             care_plans,
         )
 
+    staff_existing = connection.execute("SELECT COUNT(*) FROM staff").fetchone()[0]
+    if not staff_existing:
+        staff = [
+            ("Camila Nunes", "Enfermeira", "Enfermagem geriatrica", "07:00", "19:00", "active", "201"),
+            ("Bruno Lima", "Enfermeiro", "Urgencia e emergencia", "07:00", "19:00", "active", "202"),
+            ("Larissa Souza", "Enfermeira", "Cuidados paliativos", "19:00", "07:00", "scheduled", "203"),
+            ("Dra. Ana Ribeiro", "Medica", "Geriatria", "08:00", "20:00", "active", "301"),
+            ("Dr. Paulo Mendes", "Medico", "Clinica medica", "20:00", "08:00", "scheduled", "302"),
+            ("Marcos Vieira", "Tecnico de enfermagem", "Ala A", "07:00", "19:00", "active", "211"),
+        ]
+        connection.executemany(
+            """
+            INSERT INTO staff (name, role, specialty, shift_start, shift_end, status, phone_extension)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            staff,
+        )
+
     connection.commit()
 
 
@@ -419,6 +448,18 @@ def list_care_plans(database_path: str) -> list[dict[str, Any]]:
     return [row_to_dict(row) for row in rows]
 
 
+def list_staff(database_path: str, status: str | None = None) -> list[dict[str, Any]]:
+    query = "SELECT * FROM staff"
+    params: tuple[Any, ...] = ()
+    if status is not None:
+        query += " WHERE status = ?"
+        params = (status,)
+    query += " ORDER BY CASE role WHEN 'Medica' THEN 1 WHEN 'Medico' THEN 1 WHEN 'Enfermeira' THEN 2 WHEN 'Enfermeiro' THEN 2 ELSE 3 END, name"
+    with connect(database_path) as connection:
+        rows = connection.execute(query, params).fetchall()
+    return [row_to_dict(row) for row in rows]
+
+
 def dashboard(database_path: str) -> dict[str, Any]:
     residents = list_residents(database_path)
     tasks = list_tasks(database_path)
@@ -427,6 +468,10 @@ def dashboard(database_path: str) -> dict[str, Any]:
     family_contacts = list_family_contacts(database_path)
     visits = list_visits(database_path)
     care_plans = list_care_plans(database_path)
+    staff = list_staff(database_path)
+    active_staff = [member for member in staff if member["status"] == "active"]
+    active_nurses = [member for member in active_staff if member["role"] in {"Enfermeira", "Enfermeiro"}]
+    doctors_on_duty = [member for member in active_staff if member["role"] in {"Medica", "Medico"}]
     pending_tasks = [task for task in tasks if task["status"] != "done"]
     due_meds = [med for med in medications if med["status"] != "given"]
     high_risk = [resident for resident in residents if resident["risk"]["level"] == "critico"]
@@ -442,6 +487,8 @@ def dashboard(database_path: str) -> dict[str, Any]:
             "due_meds": len(due_meds),
             "family_contacts": len(family_contacts),
             "emergency_contacts": len(emergency_contacts),
+            "active_nurses": len(active_nurses),
+            "doctors_on_duty": len(doctors_on_duty),
         },
         "residents": residents,
         "tasks": tasks,
@@ -450,6 +497,10 @@ def dashboard(database_path: str) -> dict[str, Any]:
         "family_contacts": family_contacts,
         "visits": visits,
         "care_plans": care_plans,
+        "staff": staff,
+        "active_staff": active_staff,
+        "active_nurses": active_nurses,
+        "doctors_on_duty": doctors_on_duty,
     }
 
 

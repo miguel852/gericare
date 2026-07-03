@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -29,19 +29,54 @@ templates = Jinja2Templates(directory=str(BASE_DIR / "app" / "templates"))
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "app" / "static")), name="static")
 
 
-@app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+def render_page(request: Request, page: str, title: str):
     settings = get_settings()
     data = database.dashboard(settings.database_path)
     return templates.TemplateResponse(
-        request,
         "dashboard.html",
         {
             "request": request,
             "facility_name": settings.facility_name,
+            "page": page,
+            "page_title": title,
             **data,
         },
     )
+
+
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return render_page(request, "dashboard", "Visao geral")
+
+
+@app.get("/residentes", response_class=HTMLResponse)
+async def residents_page(request: Request):
+    return render_page(request, "residents", "Residentes")
+
+
+@app.get("/plantao", response_class=HTMLResponse)
+async def shift_page(request: Request):
+    return render_page(request, "shift", "Plantao")
+
+
+@app.get("/medicacoes", response_class=HTMLResponse)
+async def medications_page(request: Request):
+    return render_page(request, "medications", "Medicacoes")
+
+
+@app.get("/familiares", response_class=HTMLResponse)
+async def family_page(request: Request):
+    return render_page(request, "family", "Familiares e visitas")
+
+
+@app.get("/cuidados", response_class=HTMLResponse)
+async def care_page(request: Request):
+    return render_page(request, "care", "Planos de cuidado")
+
+
+@app.get("/equipe", response_class=HTMLResponse)
+async def staff_page(request: Request):
+    return render_page(request, "staff", "Equipe de plantao")
 
 
 @app.get("/health")
@@ -71,6 +106,12 @@ async def api_family_contacts():
 async def api_visits():
     settings = get_settings()
     return database.list_visits(settings.database_path)
+
+
+@app.get("/api/staff")
+async def api_staff(status: str | None = None):
+    settings = get_settings()
+    return database.list_staff(settings.database_path, status)
 
 
 @app.get("/api/residents/{resident_id}/digest")
@@ -114,7 +155,5 @@ async def api_export_residents():
 
 
 @app.get("/{path:path}", include_in_schema=False)
-async def fallback_to_dashboard(path: str):
-    if path.startswith("api/") or path.startswith("static/"):
-        raise HTTPException(status_code=404, detail="Not found")
-    return RedirectResponse(url="/")
+async def not_found(path: str):
+    raise HTTPException(status_code=404, detail="Pagina nao encontrada")
